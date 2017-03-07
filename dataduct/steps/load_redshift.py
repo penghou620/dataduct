@@ -42,20 +42,30 @@ class LoadRedshiftStep(ETLStep):
             table_name=table,
         )
 
-        command_options = (command_options or
-                           ["DELIMITER '\t' ESCAPE TRUNCATECOLUMNS NULL AS 'NULL' "])
+        default_command_options = [
+            "DELIMITER 't'",
+            "ESCAPE",
+            "TRUNCATECOLUMNS",
+            "NULL AS 'NULL'"
+        ]
+        if command_options is None:
+            command_options = default_command_options
 
-        if compression == "gzip":
-          command_options.append("GZIP")
-        elif compression == "bzip2":
-          command_options.append("BZIP2")
-        elif compression == "lzo":
-          command_options.append("lzop")
-        if max_errors:
-            command_options.append('MAXERROR %d' % int(max_errors))
-        if replace_invalid_char:
-            command_options.append(
-                "ACCEPTINVCHARS AS '%s'" %replace_invalid_char)
+            if compression == "gzip":
+                command_options.append("GZIP")
+            elif compression == "bzip2":
+                command_options.append("BZIP2")
+            elif compression == "lzo":
+                command_options.append("lzop")
+
+            if max_errors:
+                command_options.append('MAXERROR %d' % int(max_errors))
+            if replace_invalid_char:
+                command_options.append(
+                    "ACCEPTINVCHARS AS '%s'" % replace_invalid_char
+                )
+
+            command_options = ' '.join(command_options)
 
         self.create_pipeline_object(
             object_class=RedshiftCopyActivity,
